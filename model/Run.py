@@ -37,6 +37,9 @@ args.add_argument('--cell',default=config['model']['cell'],type=str)
 args.add_argument('--batch_size', default=config['train']['batch_size'], type=int)
 args.add_argument('--epochs', default=config['train']['epochs'], type=int)
 args.add_argument('--lr_init', default=config['train']['lr_init'], type=float)
+args.add_argument('--val_times', default=config['train']['val_times'], type=int)
+#test
+args.add_argument('--test_times', default=config['test']['test_times'], type=int)
 #log
 args.add_argument('--log_dir', default='./', type=str)
 args.add_argument('--log_step', default=config['log']['log_step'], type=int)

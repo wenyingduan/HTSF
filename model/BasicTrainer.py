@@ -6,6 +6,7 @@ import time
 import copy
 import numpy as np
 from lib.logger import get_logger
+from lib.metrics import MAE_torch, RMSE_torch
 
 class Trainer(object):
     def __init__(self, 
@@ -44,8 +45,8 @@ class Trainer(object):
         for idx, x in enumerate(self.train_loader):
             self.optimizer.zero_grad()
             meta_inputs, main_inputs, labels = x
-            pred ,z= self.model(meta_inputs.float().cuda(), main_inputs.float().cuda())
-            loss = self.criterion(pred.squeeze(),labels.float().cuda())
+            pred ,z= self.model(meta_inputs.float().to(self.args.device), main_inputs.float().to(self.args.device))
+            loss = self.criterion(pred.squeeze(),labels.float().to(self.args.device))
             total_loss = total_loss+loss.item()
             loss.backward()
             self.optimizer.step()
@@ -64,12 +65,19 @@ class Trainer(object):
             for idx, x in enumerate(self.val_loader):
                 self.optimizer.zero_grad()
                 meta_inputs, main_inputs, labels = x
-                pred , _= self.model(meta_inputs.float().cuda(), main_inputs.float().cuda())
-                loss = self.criterion(pred.squeeze(),labels.float().cuda())
+                pred , _= self.model(meta_inputs.float().to(self.args.device), main_inputs.float().to(self.args.device))
+                loss = self.criterion(pred.squeeze(),labels.float().to(self.args.device))
                 total_val_loss = total_val_loss+loss.item()
         val_loss = total_val_loss / len(self.val_loader)
-        self.logger.info('**********Val Epoch {}: average Loss: {:.6f}'.format(epoch, val_loss))
+        #self.logger.info('**********Val Epoch {}: average Loss: {:.6f}'.format(epoch, val_loss))
         return val_loss
+    def validation(self, epoch):
+        total_val_loss = 0
+        for _ in range(self.args.val_times):
+            val_loss = self.val_epoch(epoch)
+            total_val_loss = total_val_loss + val_loss
+        self.logger.info('**********Val Epoch {}: average Loss: {:.6f}'.format(epoch, total_val_loss/self.args.val_times))
+        return total_val_loss/self.args.val_times
         
     def test(self):
         rmse =0
@@ -79,14 +87,16 @@ class Trainer(object):
         for idx, x in enumerate(self.test_loader):
             with torch.no_grad():
                 meta_inputs, main_inputs, labels = x
-                pred,z = self.model(meta_inputs.float().cuda(), main_inputs.float().cuda())
-                loss = self.criterion(pred.squeeze(),labels.float().cuda())
-                loss_1 = criterion_1(pred.squeeze(),labels.float().cuda())
-                loss_r = torch.sqrt(loss)
+                pred,z = self.model(meta_inputs.float().to(self.args.device), main_inputs.float().to(self.args.device))
+                #loss = self.criterion(pred.squeeze(),labels.float().cuda())
+                #loss_1 = criterion_1(pred.squeeze(),labels.float().cuda())
+                #loss_r = torch.sqrt(loss)
+                loss_1 = MAE_torch(pred.squeeze(),labels.float().to(self.args.device))
+                loss_r = RMSE_torch(pred.squeeze(),labels.float().to(self.args.device))
                 rmse = rmse+loss_r.item()
                 mae = mae+loss_1.item()
-
-        self.logger.info("Sation: {}, RMSE：{:.6f}, MAE：{:.6f}".format(self.args.station, rmse/len(self.test_loader), mae/len(self.test_loader)))  
+        return rmse/len(self.test_loader), mae/len(self.test_loader)
+        #self.logger.info("Sation: {}, RMSE：{:.6f}, MAE：{:.6f}".format(self.args.station, rmse/len(self.test_loader), mae/len(self.test_loader)))  
 
     def train(self):
         best_model = None
@@ -95,9 +105,9 @@ class Trainer(object):
         train_loss_list =[]
         val_loss_list = []
         start_time = time.time()
-        for epoch in range(200):
+        for epoch in range(self.args.epochs):
             train_epoch_loss = self.train_epoch(epoch)
-            val_epoch_loss = self.val_epoch(epoch)
+            val_epoch_loss = self.validation(epoch)
             train_loss_list.append(train_epoch_loss)
             val_loss_list.append(val_epoch_loss)
             if val_epoch_loss < best_loss:
@@ -117,7 +127,14 @@ class Trainer(object):
             self.logger.info("Saving current best model to " + self.best_path)
             
         self.model.load_state_dict(best_model)
-        self.test()
+        RMSE= 0
+        MAE = 0
+        for _ in range(self.args.test_times):
+          rmse, mae = self.test()
+          RMSE = RMSE+rmse
+          MAE = MAE+mae
+          
+        self.logger.info("Sation: {}, RMSE：{:.6f}, MAE：{:.6f}".format(self.args.station, RMSE/self.args.test_times, MAE/self.args.test_times))
 
 
 
