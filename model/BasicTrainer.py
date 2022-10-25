@@ -69,7 +69,7 @@ class Trainer(object):
                 loss = self.criterion(pred.squeeze(),labels.float().to(self.args.device))
                 total_val_loss = total_val_loss+loss.item()
         val_loss = total_val_loss / len(self.val_loader)
-        #self.logger.info('**********Val Epoch {}: average Loss: {:.6f}'.format(epoch, val_loss))
+       
         return val_loss
     def validation(self, epoch):
         total_val_loss = 0
@@ -96,8 +96,7 @@ class Trainer(object):
                 rmse = rmse+loss_r.item()
                 mae = mae+loss_1.item()
         return rmse/len(self.test_loader), mae/len(self.test_loader)
-        #self.logger.info("Sation: {}, RMSE：{:.6f}, MAE：{:.6f}".format(self.args.station, rmse/len(self.test_loader), mae/len(self.test_loader)))  
-
+       
     def train(self):
         best_model = None
         best_loss = float('inf')
