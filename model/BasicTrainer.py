@@ -88,9 +88,6 @@ class Trainer(object):
             with torch.no_grad():
                 meta_inputs, main_inputs, labels = x
                 pred,z = self.model(meta_inputs.float().to(self.args.device), main_inputs.float().to(self.args.device))
-                #loss = self.criterion(pred.squeeze(),labels.float().cuda())
-                #loss_1 = criterion_1(pred.squeeze(),labels.float().cuda())
-                #loss_r = torch.sqrt(loss)
                 loss_1 = MAE_torch(pred.squeeze(),labels.float().to(self.args.device))
                 loss_r = RMSE_torch(pred.squeeze(),labels.float().to(self.args.device))
                 rmse = rmse+loss_r.item()
