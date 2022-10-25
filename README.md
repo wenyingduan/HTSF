@@ -11,4 +11,5 @@ Air-quality dataset and Code for paper: [Combating Distribution Shift for Accura
 - argparse
 - configparser
 ## Run HTSF
+```cd model```
 ```python Run.py```
