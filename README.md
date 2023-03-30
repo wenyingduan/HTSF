@@ -17,7 +17,7 @@ cd model
 python Run.py
 ```
 If you find this code useful in your research, please cite:
-(```)
+```
 @INPROCEEDINGS{10077946,
   author={Duan, Wenying and He, Xiaoxi and Zhou, Lu and Thiele, Lothar and Rao, Hong},
   booktitle={2022 IEEE 28th International Conference on Parallel and Distributed Systems (ICPADS)}, 
@@ -27,5 +27,4 @@ If you find this code useful in your research, please cite:
   number={},
   pages={900-907},
   doi={10.1109/ICPADS56603.2022.00121}}
-
-(```)
+```
